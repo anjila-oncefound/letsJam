@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { UploadContext } from "./UploadContext";
 
@@ -8,14 +8,35 @@ const PLACEHOLDER =
   "Why is our enterprise expansion stalling, and what should we do about it in Q1?";
 
 export function StartForm() {
+  const router = useRouter();
   const [challenge, setChallenge] = useState("");
   const [files, setFiles] = useState<string[]>([]);
-  const topic = challenge.trim() || PLACEHOLDER;
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const params = new URLSearchParams();
-  params.set("topic", topic);
-  files.forEach((f) => params.append("file", f));
-  const onwardHref = `/waiting-room?${params.toString()}`;
+  async function startSession({ invite }: { invite?: boolean } = {}) {
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const topic = challenge.trim() || PLACEHOLDER;
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, files }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? `Failed (${res.status})`);
+      }
+      const { id } = (await res.json()) as { id: string };
+      const suffix = invite ? "&invite=1" : "";
+      router.push(`/waiting-room?session=${id}${suffix}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start session");
+      setSubmitting(false);
+    }
+  }
 
   return (
     <>
@@ -50,9 +71,26 @@ export function StartForm() {
         </Field>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <PrimaryLink href={onwardHref}>Draft Session</PrimaryLink>
-        <PrimaryLink href={onwardHref}>Invite team</PrimaryLink>
+      <div className="flex flex-col gap-3">
+        {error ? (
+          <p
+            className="text-[13px] text-red-600"
+            style={{ fontFamily: "var(--font-public-sans)" }}
+          >
+            {error}
+          </p>
+        ) : null}
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <PrimaryAction onClick={() => startSession()} disabled={submitting}>
+            {submitting ? "Creating room…" : "Draft Session"}
+          </PrimaryAction>
+          <PrimaryAction
+            onClick={() => startSession({ invite: true })}
+            disabled={submitting}
+          >
+            {submitting ? "Creating room…" : "Invite team"}
+          </PrimaryAction>
+        </div>
       </div>
     </>
   );
@@ -94,20 +132,24 @@ function TimePill({ label, active }: { label: string; active?: boolean }) {
   );
 }
 
-function PrimaryLink({
+function PrimaryAction({
   children,
-  href,
+  onClick,
+  disabled,
 }: {
   children: React.ReactNode;
-  href: string;
+  onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      className="flex flex-1 items-center justify-center rounded-2xl bg-[#1a1a1a] p-4 text-[14px] font-medium leading-none text-white transition-colors hover:bg-black"
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex flex-1 items-center justify-center rounded-2xl bg-[#1a1a1a] p-4 text-[14px] font-medium leading-none text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
       style={{ fontFamily: "var(--font-inter)" }}
     >
       {children}
-    </Link>
+    </button>
   );
 }

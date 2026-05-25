@@ -1,11 +1,11 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getSession } from "@/lib/sessions";
+import { WherebyRoom } from "./WherebyRoomClient";
 
 export const metadata = {
   title: "Session — Together",
 };
-
-const DEFAULT_TOPIC =
-  "Why is our enterprise expansion stalling, and what should we do about it in Q1?";
 
 type Participant = {
   initial: string;
@@ -25,30 +25,34 @@ const PARTICIPANTS: Participant[] = [
 const PROMPT_TEXT =
   "What's your read on this? What would you do, and why? Be specific — your thinking is what the AI uses to find the real choice the room faces.";
 
-const VIDEO_TILES: { initial: string; bg: string; active?: boolean }[] = [
-  { initial: "S", bg: "linear-gradient(135deg, #6b7280, #1f2937)" },
-  { initial: "M", bg: "linear-gradient(135deg, #d9b274, #6b5733)" },
-  { initial: "T", bg: "linear-gradient(135deg, #8a9982, #38453a)" },
-  { initial: "P", bg: "linear-gradient(135deg, #c97564, #5b2b21)", active: true },
-];
-
 export default async function SessionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ topic?: string; file?: string | string[] }>;
+  searchParams: Promise<{ session?: string }>;
 }) {
-  const { topic, file } = await searchParams;
-  const sessionTopic = topic?.trim() || DEFAULT_TOPIC;
-  const files = file ? (Array.isArray(file) ? file : [file]) : [];
+  const { session: sessionId } = await searchParams;
+  if (!sessionId) notFound();
+  const session = getSession(sessionId);
+  if (!session) notFound();
   return (
     <div className="flex min-h-screen items-start gap-6 bg-background p-6 md:gap-8 md:p-8">
-      <MainColumn />
-      <Sidebar topic={sessionTopic} files={files} />
+      <MainColumn roomUrl={session.roomUrl} sessionId={session.id} />
+      <Sidebar
+        sessionId={session.id}
+        topic={session.topic}
+        files={session.files}
+      />
     </div>
   );
 }
 
-function MainColumn() {
+function MainColumn({
+  roomUrl,
+  sessionId,
+}: {
+  roomUrl: string;
+  sessionId: string;
+}) {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] min-w-0 flex-1 flex-col">
       <header className="flex items-center">
@@ -57,7 +61,10 @@ function MainColumn() {
         </Link>
       </header>
       <div className="flex flex-1 items-center justify-center pr-0 pt-8 lg:pr-16">
-        <VideoGrid />
+        <WherebyRoom
+          roomUrl={roomUrl}
+          leaveHref={`/self-reflection?session=${sessionId}`}
+        />
       </div>
     </div>
   );
@@ -88,38 +95,16 @@ function JamLogo() {
   );
 }
 
-function VideoGrid() {
-  return (
-    <div className="grid aspect-[1003/639] w-full grid-cols-2 grid-rows-2 gap-0 overflow-hidden rounded-xl">
-      {VIDEO_TILES.map((tile, idx) => (
-        <VideoTile key={idx} tile={tile} />
-      ))}
-    </div>
-  );
-}
 
-function VideoTile({
-  tile,
+function Sidebar({
+  sessionId,
+  topic,
+  files,
 }: {
-  tile: { initial: string; bg: string; active?: boolean };
+  sessionId: string;
+  topic: string;
+  files: string[];
 }) {
-  return (
-    <div
-      className={`relative overflow-hidden ${
-        tile.active ? "ring-4 ring-[#34d058] ring-inset" : ""
-      }`}
-      style={{ background: tile.bg }}
-    >
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="grid h-16 w-16 place-items-center rounded-full bg-white/15 text-[24px] font-medium text-white/80">
-          {tile.initial}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Sidebar({ topic, files }: { topic: string; files: string[] }) {
   return (
     <aside className="flex h-[calc(100vh-4rem)] w-full flex-col justify-between rounded-3xl bg-white p-6 lg:w-[420px] xl:w-[479px]">
       <div className="flex flex-col gap-16">
@@ -127,7 +112,7 @@ function Sidebar({ topic, files }: { topic: string; files: string[] }) {
         <InWaitingRoom />
         <SessionContext files={files} />
       </div>
-      <AiPanel topic={topic} files={files} />
+      <AiPanel sessionId={sessionId} />
     </aside>
   );
 }
@@ -210,12 +195,6 @@ function SessionContext({ files }: { files: string[] }) {
   );
 }
 
-function buildQuery(topic: string, files: string[]) {
-  const params = new URLSearchParams();
-  params.set("topic", topic);
-  files.forEach((f) => params.append("file", f));
-  return params.toString();
-}
 
 function ContextChip({ name }: { name: string }) {
   return (
@@ -229,8 +208,8 @@ function ContextChip({ name }: { name: string }) {
   );
 }
 
-function AiPanel({ topic, files }: { topic: string; files: string[] }) {
-  const onwardHref = `/self-reflection?${buildQuery(topic, files)}`;
+function AiPanel({ sessionId }: { sessionId: string }) {
+  const onwardHref = `/self-reflection?session=${sessionId}`;
   return (
     <div className="flex flex-col gap-6 rounded-2xl bg-[#1a1a1a] p-8">
       <div className="flex items-center justify-between">

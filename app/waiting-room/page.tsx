@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getSession } from "@/lib/sessions";
+import { VideoPreview } from "./VideoPreviewClient";
+import { InviteModal } from "./InviteModal";
 
 export const metadata = {
   title: "Waiting room — Together",
 };
-
-const DEFAULT_TOPIC =
-  "Why is our enterprise expansion stalling, and what should we do about it in Q1?";
 
 const TIMELINE_STEPS = [
   "Setup",
@@ -36,15 +37,21 @@ const PARTICIPANTS: Participant[] = [
 export default async function WaitingRoomPage({
   searchParams,
 }: {
-  searchParams: Promise<{ topic?: string; file?: string | string[] }>;
+  searchParams: Promise<{ session?: string }>;
 }) {
-  const { topic, file } = await searchParams;
-  const sessionTopic = topic?.trim() || DEFAULT_TOPIC;
-  const files = file ? (Array.isArray(file) ? file : [file]) : [];
+  const { session: sessionId } = await searchParams;
+  if (!sessionId) notFound();
+  const session = getSession(sessionId);
+  if (!session) notFound();
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <Body topic={sessionTopic} files={files} />
+      <Body
+        sessionId={session.id}
+        topic={session.topic}
+        files={session.files}
+      />
+      <InviteModal />
     </div>
   );
 }
@@ -82,17 +89,26 @@ function Logo() {
   );
 }
 
-function Body({ topic, files }: { topic: string; files: string[] }) {
+function Body({
+  sessionId,
+  topic,
+  files,
+}: {
+  sessionId: string;
+  topic: string;
+  files: string[];
+}) {
   return (
     <div className="flex flex-1 flex-col items-stretch gap-6 px-6 pb-12 pt-4 md:px-12 lg:flex-row lg:gap-8 lg:px-16 lg:pb-16 lg:pt-8">
-      <MainCard topic={topic} files={files} />
+      <MainCard sessionId={sessionId} />
       <Sidebar topic={topic} files={files} />
     </div>
   );
 }
 
-function MainCard({ topic, files }: { topic: string; files: string[] }) {
-  const onwardHref = `/session?${buildQuery(topic, files)}`;
+function MainCard({ sessionId }: { sessionId: string }) {
+  const onwardHref = `/session?session=${sessionId}`;
+  const inviteHref = `/waiting-room?session=${sessionId}&invite=1`;
   return (
     <section className="flex min-w-0 flex-1 items-center justify-center">
       <div className="flex w-full max-w-[640px] flex-col items-center gap-11">
@@ -114,54 +130,13 @@ function MainCard({ topic, files }: { topic: string; files: string[] }) {
         <VideoPreview />
 
         <div className="flex w-full flex-col gap-4 sm:flex-row sm:gap-6">
-          <SecondaryButton>Invite team</SecondaryButton>
+          <SecondaryButton href={inviteHref}>Invite team</SecondaryButton>
           <SecondaryButton href={onwardHref}>Join the waiting room</SecondaryButton>
         </div>
 
         <HowItWorks />
       </div>
     </section>
-  );
-}
-
-function VideoPreview() {
-  return (
-    <div className="relative w-full max-w-[366px]">
-      <div className="absolute -left-16 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-3">
-        <IconButton ariaLabel="Toggle microphone">
-          <MicIcon />
-        </IconButton>
-        <IconButton ariaLabel="Toggle camera">
-          <VideoIcon />
-        </IconButton>
-      </div>
-      <div className="relative aspect-[547/443] w-full overflow-hidden rounded-3xl bg-gradient-to-br from-neutral-700 to-neutral-900">
-        {/* Placeholder for the local video preview */}
-        <div className="absolute inset-0 grid place-items-center">
-          <div className="grid h-20 w-20 place-items-center rounded-full bg-white/10 text-white/70">
-            <CameraEmoji />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function IconButton({
-  children,
-  ariaLabel,
-}: {
-  children: React.ReactNode;
-  ariaLabel: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      className="grid h-[56px] w-[56px] place-items-center rounded-full bg-white shadow-sm transition-colors hover:bg-neutral-100"
-    >
-      {children}
-    </button>
   );
 }
 
@@ -346,12 +321,6 @@ function SessionContext({ files }: { files: string[] }) {
   );
 }
 
-function buildQuery(topic: string, files: string[]) {
-  const params = new URLSearchParams();
-  params.set("topic", topic);
-  files.forEach((f) => params.append("file", f));
-  return params.toString();
-}
 
 function ContextChip({ name }: { name: string }) {
   return (
@@ -362,33 +331,6 @@ function ContextChip({ name }: { name: string }) {
       <DocIcon />
       {name}
     </span>
-  );
-}
-
-function MicIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function VideoIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="2" y="6" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M16 10l5-3v10l-5-3v-4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CameraEmoji() {
-  return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="2" y="6" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M16 10l5-3v10l-5-3v-4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-    </svg>
   );
 }
 

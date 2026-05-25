@@ -1,11 +1,10 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getSession } from "@/lib/sessions";
 
 export const metadata = {
   title: "Self reflection — Together",
 };
-
-const DEFAULT_TOPIC =
-  "Why is our enterprise expansion stalling, and what should we do about it in Q1?";
 
 const TIMELINE_STEPS = [
   "Setup",
@@ -35,15 +34,20 @@ const PARTICIPANTS: Participant[] = [
 export default async function SelfReflectionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ topic?: string; file?: string | string[] }>;
+  searchParams: Promise<{ session?: string }>;
 }) {
-  const { topic, file } = await searchParams;
-  const sessionTopic = topic?.trim() || DEFAULT_TOPIC;
-  const files = file ? (Array.isArray(file) ? file : [file]) : [];
+  const { session: sessionId } = await searchParams;
+  if (!sessionId) notFound();
+  const session = getSession(sessionId);
+  if (!session) notFound();
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <Body topic={sessionTopic} files={files} />
+      <Body
+        sessionId={session.id}
+        topic={session.topic}
+        files={session.files}
+      />
     </div>
   );
 }
@@ -112,17 +116,25 @@ function Logo() {
   );
 }
 
-function Body({ topic, files }: { topic: string; files: string[] }) {
+function Body({
+  sessionId,
+  topic,
+  files,
+}: {
+  sessionId: string;
+  topic: string;
+  files: string[];
+}) {
   return (
     <div className="flex flex-1 flex-col items-stretch gap-6 px-6 pb-12 pt-4 md:px-12 lg:flex-row lg:gap-8 lg:px-16 lg:pb-16 lg:pt-8">
-      <MainCard topic={topic} files={files} />
+      <MainCard sessionId={sessionId} topic={topic} />
       <Sidebar topic={topic} files={files} />
     </div>
   );
 }
 
-function MainCard({ topic, files }: { topic: string; files: string[] }) {
-  const onwardHref = `/vote?${buildQuery(topic, files)}`;
+function MainCard({ sessionId, topic }: { sessionId: string; topic: string }) {
+  const onwardHref = `/vote?session=${sessionId}`;
   return (
     <section className="flex min-w-0 flex-1 flex-col justify-between gap-12 rounded-3xl bg-white p-8 md:p-12">
       <div className="flex flex-col gap-6">
@@ -333,12 +345,6 @@ function SessionContext({ files }: { files: string[] }) {
   );
 }
 
-function buildQuery(topic: string, files: string[]) {
-  const params = new URLSearchParams();
-  params.set("topic", topic);
-  files.forEach((f) => params.append("file", f));
-  return params.toString();
-}
 
 function ContextChip({ name }: { name: string }) {
   return (
