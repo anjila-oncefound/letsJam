@@ -94,6 +94,92 @@ function BeginButton() {
   );
 }
 
+type HeroExample = {
+  title: string;
+  body: string;
+  thumbBg: string;
+};
+
+const HERO_EXAMPLES: HeroExample[] = [
+  {
+    title: "Create data infographic on c...",
+    body: "Convert the key data from an article on \"Global Coffee Consumption...",
+    thumbBg: "linear-gradient(135deg, #f4d49a, #c97a3a)",
+  },
+  {
+    title: "Design Japanese restaurant ...",
+    body: "Design a menu for my high-end Japanese restaurant, \"Sakura...",
+    thumbBg: "linear-gradient(135deg, #c8e6c0, #5a7a5e)",
+  },
+  {
+    title: "Design smart bracelet and p...",
+    body: "Design the product concept and packaging for my health-monitorin...",
+    thumbBg: "linear-gradient(135deg, #ecedef, #b5b8c0)",
+  },
+  {
+    title: "Design SaaS product launch ...",
+    body: "Design a set of product launch promotional posters for my project...",
+    thumbBg: "linear-gradient(135deg, #2a2540, #0f0c1f)",
+  },
+];
+
+function HeroExamples() {
+  return (
+    <div className="flex w-full max-w-[560px] flex-col gap-4">
+      <p
+        className="text-[13px] leading-none text-black/90"
+        style={{ fontFamily: "var(--font-public-sans)" }}
+      >
+        Get started with
+      </p>
+      <ul className="grid grid-cols-2 gap-x-8 gap-y-6">
+        {HERO_EXAMPLES.map((example) => (
+          <li key={example.title}>
+            <button
+              type="button"
+              className="group flex w-full items-start gap-3 text-left transition-opacity hover:opacity-100 focus-visible:outline-none [&:not(:hover)]:opacity-85"
+              style={{ fontFamily: "var(--font-public-sans)" }}
+            >
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-[13px] leading-tight text-black/70 group-hover:text-black">
+                    {example.title}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="shrink-0 text-[14px] leading-none text-black/40 transition-transform group-hover:translate-x-0.5 group-hover:text-black/70"
+                  >
+                    ›
+                  </span>
+                </div>
+                <p
+                  className="text-[12px] leading-snug text-black/55"
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    maskImage:
+                      "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
+                    WebkitMaskImage:
+                      "linear-gradient(to bottom, black 0%, black 55%, transparent 100%)",
+                  }}
+                >
+                  {example.body}
+                </p>
+              </div>
+              <div
+                className="aspect-square w-[72px] shrink-0 rounded-md transition-transform group-hover:scale-[1.02]"
+                style={{ background: example.thumbBg }}
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Hero() {
   return (
     <section className="relative grid grid-cols-1 gap-12 px-6 pb-24 pt-14 md:px-8 md:pt-20 lg:grid-cols-[1.15fr_1fr] lg:gap-12 lg:px-12 lg:pb-32 lg:pr-6 lg:pt-24 xl:gap-16 xl:px-[80px] xl:pr-10 xl:pt-32 2xl:px-[143px] 2xl:pr-20 2xl:pt-36">
@@ -104,16 +190,7 @@ function Hero() {
           solve together?
         </h1>
 
-        <div className="relative aspect-[720/220] w-full max-w-[560px] overflow-hidden">
-          <Image
-            src="/landing/hero-collage.png"
-            alt="Examples of strategic decisions teams have used Together for"
-            fill
-            sizes="(min-width: 1024px) 560px, 100vw"
-            className="object-cover object-top"
-            priority
-          />
-        </div>
+        <HeroExamples />
 
         <BeginButton />
       </div>
