@@ -6,7 +6,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = getSession(id);
+  const session = await getSession(id);
   if (!session) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
@@ -31,7 +31,7 @@ export async function POST(
     if (existing) return NextResponse.json(existing);
   }
 
-  const participant = addParticipant(id, name);
+  const participant = await addParticipant(id, name);
   if (!participant) {
     return NextResponse.json(
       { error: "Could not add participant" },

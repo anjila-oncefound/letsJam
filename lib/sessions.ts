@@ -1,6 +1,9 @@
-// In-memory session store.
-// TODO: replace with Vercel KV / Upstash before prod traffic.
-// On serverless cold-boot or `next dev` restart, this Map is wiped.
+import { kv } from "@vercel/kv";
+
+// Sessions live in Upstash Redis (via @vercel/kv).
+// 24h TTL matches the Whereby room's endDate so storage and the call expire together.
+
+const SESSION_TTL_SECONDS = 60 * 60 * 24;
 
 export type Participant = {
   id: string;
@@ -32,32 +35,31 @@ const AVATAR_COLORS = [
   "#fecaca",
 ];
 
-declare global {
-  // Persist across HMR in dev. In prod, the Map lives for the lifetime of the process.
-  // eslint-disable-next-line no-var
-  var __sessionStore: Map<string, StoredSession> | undefined;
+function sessionKey(id: string) {
+  return `session:${id}`;
 }
 
-const store = globalThis.__sessionStore ?? new Map<string, StoredSession>();
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__sessionStore = store;
+export async function saveSession(session: StoredSession): Promise<void> {
+  await kv.set(sessionKey(session.id), session, { ex: SESSION_TTL_SECONDS });
 }
 
-export function saveSession(session: StoredSession) {
-  store.set(session.id, session);
+export async function getSession(
+  id: string
+): Promise<StoredSession | undefined> {
+  const session = await kv.get<StoredSession>(sessionKey(id));
+  return session ?? undefined;
 }
 
-export function getSession(id: string): StoredSession | undefined {
-  return store.get(id);
-}
-
-export function addParticipant(
+// Read-modify-write. Concurrent joins (sub-second) could lose a participant; acceptable
+// for now since join rate is low. Move to RPUSH on a separate participants list if it bites.
+export async function addParticipant(
   sessionId: string,
   name: string
-): Participant | null {
-  const session = store.get(sessionId);
+): Promise<Participant | null> {
+  const session = await getSession(sessionId);
   if (!session) return null;
-  const bg = AVATAR_COLORS[session.participants.length % AVATAR_COLORS.length];
+  const bg =
+    AVATAR_COLORS[session.participants.length % AVATAR_COLORS.length];
   const participant: Participant = {
     id: crypto.randomUUID(),
     name,
@@ -65,6 +67,7 @@ export function addParticipant(
     joinedAt: Date.now(),
   };
   session.participants.push(participant);
+  await saveSession(session);
   return participant;
 }
 
@@ -77,8 +80,7 @@ export async function createWherebyRoom(): Promise<{
     throw new Error("WHEREBY_API_KEY env var is not set");
   }
 
-  // Rooms expire 24h after creation. See https://docs.whereby.com/reference/whereby-rest-api-reference
-  const endDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const endDate = new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString();
 
   const res = await fetch("https://api.whereby.dev/v1/meetings", {
     method: "POST",

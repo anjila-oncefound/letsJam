@@ -26,7 +26,7 @@ export default async function SelfReflectionPage({
 }) {
   const { session: sessionId } = await searchParams;
   if (!sessionId) notFound();
-  const session = getSession(sessionId);
+  const session = await getSession(sessionId);
   if (!session) notFound();
   return (
     <div className="flex min-h-screen flex-col bg-background">

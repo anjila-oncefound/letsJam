@@ -18,7 +18,7 @@ export default async function SessionPage({
 }) {
   const { session: sessionId } = await searchParams;
   if (!sessionId) notFound();
-  const session = getSession(sessionId);
+  const session = await getSession(sessionId);
   if (!session) notFound();
   return (
     <div className="flex min-h-screen items-start gap-6 bg-background p-6 md:gap-8 md:p-8">

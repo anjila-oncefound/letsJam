@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   try {
     const { roomUrl, hostRoomUrl } = await createWherebyRoom();
     const id = crypto.randomUUID();
-    saveSession({
+    await saveSession({
       id,
       topic,
       files,
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     });
     // Auto-register the host as a participant so we skip the name prompt for them.
     // TODO: when Google OAuth lands, replace HOST_NAME with the authed user's name.
-    const host = addParticipant(id, HOST_NAME);
+    const host = await addParticipant(id, HOST_NAME);
     return NextResponse.json({ id, host });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
