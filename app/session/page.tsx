@@ -1,26 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSession } from "@/lib/sessions";
+import { getSession, type Participant } from "@/lib/sessions";
 import { WherebyRoom } from "./WherebyRoomClient";
+import { ParticipantList } from "@/app/_components/ParticipantList";
 
 export const metadata = {
   title: "Session — Together",
 };
-
-type Participant = {
-  initial: string;
-  name: string;
-  bg: string;
-  invited?: boolean;
-};
-
-const PARTICIPANTS: Participant[] = [
-  { initial: "S", name: "Simon (You)", bg: "#9fd5f1" },
-  { initial: "M", name: "Maya", bg: "#f9f6b8" },
-  { initial: "T", name: "Theo (Invited)", bg: "#d4f0da", invited: true },
-  { initial: "P", name: "Priya (Invited)", bg: "#b9caf5", invited: true },
-  { initial: "S", name: "Sam (Invited)", bg: "#ffd9fd", invited: true },
-];
 
 const PROMPT_TEXT =
   "What's your read on this? What would you do, and why? Be specific — your thinking is what the AI uses to find the real choice the room faces.";
@@ -41,6 +27,7 @@ export default async function SessionPage({
         sessionId={session.id}
         topic={session.topic}
         files={session.files}
+        participants={session.participants}
       />
     </div>
   );
@@ -100,16 +87,22 @@ function Sidebar({
   sessionId,
   topic,
   files,
+  participants,
 }: {
   sessionId: string;
   topic: string;
   files: string[];
+  participants: Participant[];
 }) {
   return (
     <aside className="flex h-[calc(100vh-4rem)] w-full flex-col justify-between rounded-3xl bg-white p-6 lg:w-[420px] xl:w-[479px]">
       <div className="flex flex-col gap-16">
         <SessionInfo topic={topic} />
-        <InWaitingRoom />
+        <ParticipantList
+          participants={participants}
+          sessionId={sessionId}
+          label="In the waiting room"
+        />
         <SessionContext files={files} />
       </div>
       <AiPanel sessionId={sessionId} />
@@ -133,46 +126,6 @@ function SessionInfo({ topic }: { topic: string }) {
         {topic}
       </p>
     </div>
-  );
-}
-
-function InWaitingRoom() {
-  return (
-    <div className="flex flex-col gap-4">
-      <p
-        className="text-[14px] font-medium leading-none text-black"
-        style={{ fontFamily: "var(--font-public-sans)" }}
-      >
-        In the waiting room
-      </p>
-      <ul className="flex flex-col gap-4 px-3">
-        {PARTICIPANTS.map((p) => (
-          <li
-            key={p.name}
-            className={`flex items-center gap-4 ${p.invited ? "opacity-40" : ""}`}
-          >
-            <ParticipantAvatar initial={p.initial} bg={p.bg} />
-            <span
-              className="text-[14px] leading-none text-black"
-              style={{ fontFamily: "var(--font-public-sans)" }}
-            >
-              {p.name}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ParticipantAvatar({ initial, bg }: { initial: string; bg: string }) {
-  return (
-    <span
-      className="grid h-6 w-6 place-items-center rounded-full text-[10px] leading-none text-black"
-      style={{ backgroundColor: bg, fontFamily: "var(--font-public-sans)" }}
-    >
-      {initial}
-    </span>
   );
 }
 

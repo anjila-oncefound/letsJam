@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSession } from "@/lib/sessions";
+import { getSession, type Participant } from "@/lib/sessions";
+import { ParticipantList } from "@/app/_components/ParticipantList";
 
 export const metadata = {
   title: "Vote — Together",
@@ -17,19 +18,6 @@ const TIMELINE_STEPS = [
 
 const ACTIVE_STEP = 4;
 
-type Participant = {
-  initial: string;
-  name: string;
-  bg: string;
-};
-
-const PARTICIPANTS: Participant[] = [
-  { initial: "S", name: "Simon (You)", bg: "#9fd5f1" },
-  { initial: "M", name: "Maya", bg: "#f9f6b8" },
-  { initial: "T", name: "Theo (Completed)", bg: "#d4f0da" },
-  { initial: "P", name: "Priya", bg: "#b9caf5" },
-  { initial: "S", name: "Sam", bg: "#ffd9fd" },
-];
 
 const PERSPECTIVE_BODY =
   "What's your read on this? What would you do, and why? Be specific — your thinking is what the AI uses to find the real choice the room faces.";
@@ -50,6 +38,7 @@ export default async function VotePage({
         sessionId={session.id}
         topic={session.topic}
         files={session.files}
+        participants={session.participants}
       />
     </div>
   );
@@ -123,15 +112,22 @@ function Body({
   sessionId,
   topic,
   files,
+  participants,
 }: {
   sessionId: string;
   topic: string;
   files: string[];
+  participants: Participant[];
 }) {
   return (
     <div className="flex flex-1 flex-col items-stretch gap-6 px-6 pb-12 pt-4 md:px-12 lg:flex-row lg:gap-8 lg:px-16 lg:pb-16 lg:pt-8">
       <MainCard sessionId={sessionId} />
-      <Sidebar topic={topic} files={files} />
+      <Sidebar
+        sessionId={sessionId}
+        topic={topic}
+        files={files}
+        participants={participants}
+      />
     </div>
   );
 }
@@ -262,12 +258,26 @@ function RefineCard({ refineHref }: { refineHref: string }) {
   );
 }
 
-function Sidebar({ topic, files }: { topic: string; files: string[] }) {
+function Sidebar({
+  sessionId,
+  topic,
+  files,
+  participants,
+}: {
+  sessionId: string;
+  topic: string;
+  files: string[];
+  participants: Participant[];
+}) {
   return (
     <aside className="flex w-full flex-col gap-8 rounded-3xl bg-white p-6 lg:w-[420px] xl:w-[479px]">
       <SessionInfo topic={topic} />
       <Timeline />
-      <InTheRoom />
+      <ParticipantList
+        participants={participants}
+        sessionId={sessionId}
+        label="In the room"
+      />
       <SessionContext files={files} />
     </aside>
   );
@@ -341,43 +351,6 @@ function StepIndicator({
       style={{ fontFamily: "var(--font-public-sans)" }}
     >
       {number}
-    </span>
-  );
-}
-
-function InTheRoom() {
-  return (
-    <div className="flex flex-col gap-4">
-      <p
-        className="text-[14px] font-medium leading-none text-black"
-        style={{ fontFamily: "var(--font-public-sans)" }}
-      >
-        In the room
-      </p>
-      <ul className="flex flex-col gap-4">
-        {PARTICIPANTS.map((p) => (
-          <li key={p.name} className="flex items-center gap-4">
-            <ParticipantAvatar initial={p.initial} bg={p.bg} />
-            <span
-              className="text-[14px] leading-none text-black"
-              style={{ fontFamily: "var(--font-public-sans)" }}
-            >
-              {p.name}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ParticipantAvatar({ initial, bg }: { initial: string; bg: string }) {
-  return (
-    <span
-      className="grid h-6 w-6 place-items-center rounded-full text-[10px] leading-none text-black"
-      style={{ backgroundColor: bg, fontFamily: "var(--font-public-sans)" }}
-    >
-      {initial}
     </span>
   );
 }

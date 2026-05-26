@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { createWherebyRoom, saveSession } from "@/lib/sessions";
+import {
+  addParticipant,
+  createWherebyRoom,
+  saveSession,
+} from "@/lib/sessions";
+
+const HOST_NAME = "Simon";
 
 export async function POST(req: Request) {
   let body: { topic?: unknown; files?: unknown };
@@ -31,8 +37,12 @@ export async function POST(req: Request) {
       roomUrl,
       hostRoomUrl,
       createdAt: Date.now(),
+      participants: [],
     });
-    return NextResponse.json({ id });
+    // Auto-register the host as a participant so we skip the name prompt for them.
+    // TODO: when Google OAuth lands, replace HOST_NAME with the authed user's name.
+    const host = addParticipant(id, HOST_NAME);
+    return NextResponse.json({ id, host });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json(

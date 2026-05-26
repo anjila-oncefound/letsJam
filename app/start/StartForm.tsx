@@ -29,7 +29,18 @@ export function StartForm() {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `Failed (${res.status})`);
       }
-      const { id } = (await res.json()) as { id: string };
+      const { id, host } = (await res.json()) as {
+        id: string;
+        host?: { id: string; name: string; bg: string };
+      };
+      // Pre-stash the host's participant identity so JoinModal doesn't prompt them.
+      if (host) {
+        try {
+          localStorage.setItem(`participant.${id}`, JSON.stringify(host));
+        } catch {
+          // ignore (private browsing / storage full)
+        }
+      }
       const suffix = invite ? "&invite=1" : "";
       router.push(`/waiting-room?session=${id}${suffix}`);
     } catch (err) {

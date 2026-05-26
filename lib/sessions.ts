@@ -2,6 +2,13 @@
 // TODO: replace with Vercel KV / Upstash before prod traffic.
 // On serverless cold-boot or `next dev` restart, this Map is wiped.
 
+export type Participant = {
+  id: string;
+  name: string;
+  bg: string;
+  joinedAt: number;
+};
+
 export type StoredSession = {
   id: string;
   topic: string;
@@ -9,7 +16,21 @@ export type StoredSession = {
   roomUrl: string;
   hostRoomUrl: string;
   createdAt: number;
+  participants: Participant[];
 };
+
+const AVATAR_COLORS = [
+  "#9fd5f1",
+  "#f9f6b8",
+  "#d4f0da",
+  "#b9caf5",
+  "#ffd9fd",
+  "#fed7aa",
+  "#bae6fd",
+  "#bbf7d0",
+  "#e9d5ff",
+  "#fecaca",
+];
 
 declare global {
   // Persist across HMR in dev. In prod, the Map lives for the lifetime of the process.
@@ -28,6 +49,23 @@ export function saveSession(session: StoredSession) {
 
 export function getSession(id: string): StoredSession | undefined {
   return store.get(id);
+}
+
+export function addParticipant(
+  sessionId: string,
+  name: string
+): Participant | null {
+  const session = store.get(sessionId);
+  if (!session) return null;
+  const bg = AVATAR_COLORS[session.participants.length % AVATAR_COLORS.length];
+  const participant: Participant = {
+    id: crypto.randomUUID(),
+    name,
+    bg,
+    joinedAt: Date.now(),
+  };
+  session.participants.push(participant);
+  return participant;
 }
 
 export async function createWherebyRoom(): Promise<{
