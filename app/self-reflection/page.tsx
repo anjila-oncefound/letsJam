@@ -42,6 +42,7 @@ export default async function SelfReflectionPage({
         files={session.files}
         participants={session.participants}
         summary={session.summary}
+        hostId={session.participants[0]?.id}
       />
     </div>
   );
@@ -119,16 +120,23 @@ function Body({
   files,
   participants,
   summary,
+  hostId,
 }: {
   sessionId: string;
   topic: string;
   files: string[];
   participants: Participant[];
   summary?: SessionSummary;
+  hostId?: string;
 }) {
   return (
     <div className="flex flex-1 flex-col items-stretch gap-6 px-6 pb-12 pt-4 md:px-12 lg:flex-row lg:gap-8 lg:px-16 lg:pb-16 lg:pt-8">
-      <MainCard sessionId={sessionId} topic={topic} summary={summary} />
+      <MainCard
+        sessionId={sessionId}
+        topic={topic}
+        summary={summary}
+        hostId={hostId}
+      />
       <Sidebar
         sessionId={sessionId}
         topic={topic}
@@ -143,10 +151,12 @@ function MainCard({
   sessionId,
   topic,
   summary,
+  hostId,
 }: {
   sessionId: string;
   topic: string;
   summary?: SessionSummary;
+  hostId?: string;
 }) {
   const onwardHref = `/vote?session=${sessionId}`;
   return (
@@ -167,7 +177,11 @@ function MainCard({
 
         <SummarySnippets summary={summary} />
 
-        <ReflectionForm sessionId={sessionId} onwardHref={onwardHref} />
+        <ReflectionForm
+          sessionId={sessionId}
+          onwardHref={onwardHref}
+          hostId={hostId}
+        />
       </div>
     </section>
   );

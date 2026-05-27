@@ -32,12 +32,20 @@ Rules:
 export async function clusterReflections(
   topic: string,
   reflections: Reflection[],
-  summary?: SessionSummary
+  summary?: SessionSummary,
+  refineContext?: string[]
 ): Promise<Perspective[]> {
   const written = reflections
     .filter((r) => !r.passed && r.text.trim().length > 0)
     .map((r) => `${r.name}: ${r.text}`)
     .join("\n\n");
+
+  const refine =
+    refineContext && refineContext.length > 0
+      ? `\n\nThe previous round was sent back to refine. What people said was missing:\n${refineContext.join(
+          "\n"
+        )}\nMake the two paths genuinely sharper and address these gaps.`
+      : "";
 
   const context = summary
     ? [
@@ -69,7 +77,7 @@ export async function clusterReflections(
     messages: [
       {
         role: "user",
-        content: `Topic: ${topic}\n\n${context}\n\nPrivate reflections:\n${written}`,
+        content: `Topic: ${topic}\n\n${context}\n\nPrivate reflections:\n${written}${refine}`,
       },
     ],
     output_config: { format: zodOutputFormat(ClusterSchema) },

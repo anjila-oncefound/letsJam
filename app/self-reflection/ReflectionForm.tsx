@@ -1,21 +1,30 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const POLL_MS = 3000;
 
 export function ReflectionForm({
   sessionId,
   onwardHref,
+  hostId,
 }: {
   sessionId: string;
   onwardHref: string;
+  hostId?: string;
 }) {
   const router = useRouter();
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // null = still editing; once set, we've submitted and are gating on others.
+  const [gate, setGate] = useState<{ submitted: number; total: number } | null>(
+    null
+  );
+  const [meId, setMeId] = useState<string | null>(null);
 
-  function participantId(): string | null {
+  const participantId = useCallback((): string | null => {
     try {
       const stored = localStorage.getItem(`participant.${sessionId}`);
       if (!stored) return null;
@@ -24,7 +33,76 @@ export function ReflectionForm({
     } catch {
       return null;
     }
-  }
+  }, [sessionId]);
+
+  useEffect(() => {
+    setMeId(participantId());
+  }, [participantId]);
+
+  const isHost = !!meId && !!hostId && meId === hostId;
+
+  // On reload: if we already submitted for this round, drop straight into the gate.
+  useEffect(() => {
+    const pid = participantId();
+    if (!pid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/status`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          submitted: number;
+          total: number;
+          allSubmitted: boolean;
+          submittedIds: string[];
+        };
+        if (cancelled) return;
+        if (data.allSubmitted) {
+          router.push(onwardHref);
+          return;
+        }
+        if (data.submittedIds.includes(pid)) {
+          setGate({ submitted: data.submitted, total: data.total });
+        }
+      } catch {
+        // ignore — fall back to the form
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, participantId, router, onwardHref]);
+
+  // Poll while gating.
+  useEffect(() => {
+    if (!gate) return;
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/status`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          submitted: number;
+          total: number;
+          allSubmitted: boolean;
+        };
+        if (cancelled) return;
+        setGate({ submitted: data.submitted, total: data.total });
+        if (data.allSubmitted) router.push(onwardHref);
+      } catch {
+        // ignore transient failures
+      }
+    };
+    const handle = setInterval(tick, POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(handle);
+    };
+  }, [gate, sessionId, router, onwardHref]);
 
   async function submit({ passed }: { passed: boolean }) {
     if (submitting) return;
@@ -49,11 +127,70 @@ export function ReflectionForm({
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `Failed (${res.status})`);
       }
-      router.push(onwardHref);
+      const status = await fetch(`/api/sessions/${sessionId}/status`, {
+        cache: "no-store",
+      });
+      const data = (await status.json().catch(() => null)) as {
+        submitted: number;
+        total: number;
+        allSubmitted: boolean;
+      } | null;
+      if (data?.allSubmitted) {
+        router.push(onwardHref);
+        return;
+      }
+      setGate(
+        data
+          ? { submitted: data.submitted, total: data.total }
+          : { submitted: 1, total: 1 }
+      );
+      setSubmitting(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to submit");
       setSubmitting(false);
     }
+  }
+
+  async function startVoteAnyway() {
+    try {
+      await fetch(`/api/sessions/${sessionId}/synthesize`, { method: "POST" });
+    } catch {
+      // /vote will synthesize on arrival if this didn't take
+    }
+    router.push(onwardHref);
+  }
+
+  if (gate) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex h-[342px] flex-col items-center justify-center gap-4 rounded-2xl bg-[#f5f5f5] p-8 text-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black/20 border-t-[#e85d3c]" />
+          <p
+            className="text-[15px] text-[#1a1a1a]"
+            style={{ fontFamily: "var(--font-public-sans)" }}
+          >
+            Waiting for others…
+          </p>
+          <p
+            className="text-[13px] text-black/55"
+            style={{ fontFamily: "var(--font-public-sans)" }}
+          >
+            {gate.submitted} of {gate.total} have weighed in. The paths appear
+            once everyone&apos;s in.
+          </p>
+        </div>
+        {isHost ? (
+          <button
+            type="button"
+            onClick={startVoteAnyway}
+            className="flex w-full items-center justify-center rounded-2xl bg-[#1a1a1a] p-4 text-[14px] font-medium leading-none text-white transition-colors hover:bg-black"
+            style={{ fontFamily: "var(--font-public-sans)" }}
+          >
+            Start vote anyway
+          </button>
+        ) : null}
+      </div>
+    );
   }
 
   return (

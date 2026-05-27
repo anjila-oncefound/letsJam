@@ -1,14 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSession, type Participant } from "@/lib/sessions";
+import { getSession, type Participant, type Outcome } from "@/lib/sessions";
 import { ParticipantList } from "@/app/_components/ParticipantList";
 
 export const metadata = {
-  title: "Refine — Jam",
+  title: "The call — Jam",
 };
-
-const PREVIOUS_THINKING =
-  "What's your read on this? What would you do, and why? Be specific — your thinking is what the AI uses to find the real choice the room faces.";
 
 const TIMELINE_STEPS = [
   "Setup",
@@ -19,10 +16,9 @@ const TIMELINE_STEPS = [
   "The call",
 ];
 
-const ACTIVE_STEP = 2;
+const ACTIVE_STEP = 5;
 
-
-export default async function RefinePage({
+export default async function TheCallPage({
   searchParams,
 }: {
   searchParams: Promise<{ session?: string }>;
@@ -39,6 +35,7 @@ export default async function RefinePage({
         topic={session.topic}
         files={session.files}
         participants={session.participants}
+        outcome={session.outcome}
       />
     </div>
   );
@@ -50,37 +47,6 @@ function Header() {
       <Link href="/" className="inline-flex" aria-label="Jam home">
         <Logo />
       </Link>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="Toggle camera"
-          className="grid h-[46px] w-[46px] place-items-center rounded-full bg-[#f5f5f5] transition-colors hover:bg-neutral-200"
-        >
-          <VideoIcon />
-        </button>
-        <button
-          type="button"
-          aria-label="Copy invite link"
-          className="grid h-[46px] w-[46px] place-items-center rounded-full bg-[#f5f5f5] transition-colors hover:bg-neutral-200"
-        >
-          <LinkIcon />
-        </button>
-        <div className="flex h-[46px] items-center gap-6 rounded-full bg-[#232323] px-6">
-          <span
-            className="text-[15px] leading-none text-white"
-            style={{ fontFamily: "var(--font-public-sans)" }}
-          >
-            4:24s remaining
-          </span>
-          <button
-            type="button"
-            className="text-[15px] leading-none text-white transition-opacity hover:opacity-80"
-            style={{ fontFamily: "var(--font-public-sans)" }}
-          >
-            Pause
-          </button>
-        </div>
-      </div>
     </header>
   );
 }
@@ -115,107 +81,96 @@ function Body({
   topic,
   files,
   participants,
+  outcome,
 }: {
   sessionId: string;
   topic: string;
   files: string[];
   participants: Participant[];
+  outcome?: Outcome;
 }) {
   return (
     <div className="flex flex-1 flex-col items-stretch gap-6 px-6 pb-12 pt-4 md:px-12 lg:flex-row lg:gap-8 lg:px-16 lg:pb-16 lg:pt-8">
-      <MainCard sessionId={sessionId} topic={topic} />
-      <Sidebar
-        sessionId={sessionId}
-        topic={topic}
-        files={files}
-        participants={participants}
-      />
+      <MainCard sessionId={sessionId} outcome={outcome} />
+      <Sidebar sessionId={sessionId} topic={topic} files={files} participants={participants} />
     </div>
   );
 }
 
-function MainCard({ sessionId, topic }: { sessionId: string; topic: string }) {
-  const onwardHref = `/vote?session=${sessionId}`;
+function MainCard({
+  sessionId,
+  outcome,
+}: {
+  sessionId: string;
+  outcome?: Outcome;
+}) {
   return (
-    <section className="flex min-w-0 flex-1 flex-col justify-between gap-12 rounded-3xl bg-white p-8 md:p-12">
-      <div className="flex flex-col gap-6">
+    <section className="flex min-w-0 flex-1 flex-col gap-8 rounded-3xl bg-white p-8 md:p-12">
+      <div className="flex flex-col gap-4">
         <p
-          className="text-[14px] font-medium leading-none text-black"
+          className="text-[14px] font-medium leading-none text-[#e96748]"
           style={{ fontFamily: "var(--font-public-sans)" }}
         >
-          What&apos;s your take?
+          The call
         </p>
         <h1
           className="text-[40px] leading-none tracking-[-0.96px] text-[#1a1a1a] md:text-[48px]"
           style={{ fontFamily: "var(--font-queens)" }}
         >
-          {topic}
+          {outcome ? "The room decided" : "No decision yet"}
         </h1>
-
-        <PreviousThinkingCard text={PREVIOUS_THINKING} />
-
-        <ReflectionInput />
       </div>
 
-      <div className="flex gap-4">
-        <button
-          type="button"
-          className="flex w-[228px] items-center justify-center rounded-2xl bg-white p-4 text-[14px] font-medium leading-none text-black ring-1 ring-inset ring-black/10 transition-colors hover:bg-neutral-100"
+      {outcome ? (
+        <Decision outcome={outcome} />
+      ) : (
+        <div
+          className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl bg-[#f5f5f5] p-12 text-center"
           style={{ fontFamily: "var(--font-public-sans)" }}
         >
-          Pass
-        </button>
-        <Link
-          href={onwardHref}
-          className="flex flex-1 items-center justify-center rounded-2xl bg-[#1a1a1a] p-4 text-[14px] font-medium leading-none text-white transition-colors hover:bg-black"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          Submit
-        </Link>
-      </div>
+          <p className="text-[15px] text-[#1a1a1a]">
+            This session hasn&apos;t resolved a vote yet.
+          </p>
+          <Link
+            href={`/vote?session=${sessionId}`}
+            className="mt-2 rounded-xl bg-[#1a1a1a] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-black"
+          >
+            Back to vote
+          </Link>
+        </div>
+      )}
     </section>
   );
 }
 
-function PreviousThinkingCard({ text }: { text: string }) {
+function Decision({ outcome }: { outcome: Outcome }) {
+  const { perspective } = outcome;
   return (
-    <div
-      className="flex flex-col gap-3 rounded-2xl bg-[#1a1a1a] p-4 text-[12px]"
-      style={{ fontFamily: "var(--font-public-sans)" }}
-    >
-      <p className="leading-none text-white/50">Whose thinking</p>
-      <p className="leading-[1.5] text-white">{text}</p>
-    </div>
-  );
-}
-
-function ReflectionInput() {
-  return (
-    <div className="flex h-[342px] flex-col justify-between rounded-2xl bg-[#f5f5f5] p-4">
-      <textarea
-        className="w-full flex-1 resize-none bg-transparent text-[15px] leading-[1.5] text-[#1a1a1a] outline-none placeholder:text-[#7a7a7a]"
-        defaultValue="What's your read on this? What would you do, and why? Be specific — your thinking is what the AI uses to find the real choice the room faces."
+    <div className="flex flex-col gap-6 rounded-2xl bg-[#f5f5f5] p-6 md:p-8">
+      <p
+        className="text-[14px] font-medium leading-none text-[#e96748]"
         style={{ fontFamily: "var(--font-public-sans)" }}
-      />
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-[#b5b5b5]" aria-hidden>
-            🔒
-          </span>
-          <p
-            className="text-[12px] text-[#7a7a7a]"
-            style={{ fontFamily: "var(--font-public-sans)" }}
-          >
-            Private until everyone is in
-          </p>
-        </div>
-        <button
-          type="button"
-          className="rounded-xl bg-white px-4 py-2 text-[14px] font-medium leading-none text-[#1a1a1a] transition-colors hover:bg-neutral-100"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          Refine
-        </button>
+      >
+        {perspective.label}
+      </p>
+      <h2
+        className="text-[24px] font-medium leading-snug text-black md:text-[28px]"
+        style={{ fontFamily: "var(--font-public-sans)" }}
+      >
+        {perspective.title}
+      </h2>
+      <p
+        className="text-[15px] leading-[1.6] text-[#1a1a1a]"
+        style={{ fontFamily: "var(--font-public-sans)" }}
+      >
+        {perspective.body}
+      </p>
+      <div
+        className="flex flex-col gap-2 rounded-2xl bg-white p-4 text-[13px]"
+        style={{ fontFamily: "var(--font-public-sans)" }}
+      >
+        <p className="leading-none text-[#1a1a1a]/50">Whose thinking</p>
+        <p className="leading-[1.5] text-[#1a1a1a]">{perspective.attribution}</p>
       </div>
     </div>
   );
@@ -337,7 +292,6 @@ function SessionContext({ files }: { files: string[] }) {
   );
 }
 
-
 function ContextChip({ name }: { name: string }) {
   return (
     <span
@@ -347,28 +301,6 @@ function ContextChip({ name }: { name: string }) {
       <DocIcon />
       {name}
     </span>
-  );
-}
-
-function VideoIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="2" y="6" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M16 10l5-3v10l-5-3v-4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function LinkIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M10 14a4 4 0 010-5.66l3-3a4 4 0 015.66 5.66l-1.5 1.5M14 10a4 4 0 010 5.66l-3 3a4 4 0 01-5.66-5.66l1.5-1.5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
-    </svg>
   );
 }
 

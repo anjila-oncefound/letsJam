@@ -7,6 +7,7 @@ import {
 } from "@/lib/sessions";
 import { ParticipantList } from "@/app/_components/ParticipantList";
 import { SynthesizePanel } from "./SynthesizePanel";
+import { VotePanel } from "./VotePanel";
 
 export const metadata = {
   title: "Vote — Jam",
@@ -41,6 +42,8 @@ export default async function VotePage({
         files={session.files}
         participants={session.participants}
         perspectives={session.perspectives}
+        round={session.round ?? 1}
+        hostId={session.participants[0]?.id}
       />
     </div>
   );
@@ -118,16 +121,25 @@ function Body({
   files,
   participants,
   perspectives,
+  round,
+  hostId,
 }: {
   sessionId: string;
   topic: string;
   files: string[];
   participants: Participant[];
   perspectives?: Perspective[];
+  round: number;
+  hostId?: string;
 }) {
   return (
     <div className="flex flex-1 flex-col items-stretch gap-6 px-6 pb-12 pt-4 md:px-12 lg:flex-row lg:gap-8 lg:px-16 lg:pb-16 lg:pt-8">
-      <MainCard sessionId={sessionId} perspectives={perspectives} />
+      <MainCard
+        sessionId={sessionId}
+        perspectives={perspectives}
+        round={round}
+        hostId={hostId}
+      />
       <Sidebar
         sessionId={sessionId}
         topic={topic}
@@ -141,11 +153,14 @@ function Body({
 function MainCard({
   sessionId,
   perspectives,
+  round,
+  hostId,
 }: {
   sessionId: string;
   perspectives?: Perspective[];
+  round: number;
+  hostId?: string;
 }) {
-  const refineHref = `/refine?session=${sessionId}`;
   const ready = perspectives && perspectives.length >= 2;
   return (
     <section className="flex min-w-0 flex-1 flex-col gap-6 rounded-3xl bg-white p-8 md:p-12">
@@ -165,109 +180,16 @@ function MainCard({
       </div>
 
       {ready ? (
-        <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-3">
-          {perspectives!.slice(0, 2).map((p, i) => (
-            <PerspectiveCard
-              key={p.label}
-              label={p.label}
-              title={p.title}
-              body={p.body}
-              attribution={p.attribution}
-              ctaLabel={`Vote ${String.fromCharCode(65 + i)}`}
-            />
-          ))}
-          <RefineCard refineHref={refineHref} />
-        </div>
+        <VotePanel
+          sessionId={sessionId}
+          perspectives={perspectives!}
+          round={round}
+          hostId={hostId}
+        />
       ) : (
         <SynthesizePanel sessionId={sessionId} />
       )}
     </section>
-  );
-}
-
-function PerspectiveCard({
-  label,
-  title,
-  body,
-  attribution,
-  ctaLabel,
-}: {
-  label: string;
-  title: string;
-  body: string;
-  attribution: string;
-  ctaLabel: string;
-}) {
-  return (
-    <article className="flex h-full min-h-[420px] flex-col justify-between gap-6 rounded-2xl bg-[#f5f5f5] p-4">
-      <div className="flex flex-col gap-6">
-        <p
-          className="text-[14px] font-medium leading-none text-[#e96748]"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          {label}
-        </p>
-        <h2
-          className="text-[18px] font-medium leading-snug text-black"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          {title}
-        </h2>
-        <p
-          className="text-[12px] leading-[1.5] text-[#1a1a1a]"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          {body}
-        </p>
-      </div>
-      <div className="flex flex-col gap-6">
-        <div
-          className="flex flex-col gap-2 rounded-2xl bg-white p-4 text-[12px]"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          <p className="leading-none text-[#1a1a1a]/50">Whose thinking</p>
-          <p className="leading-[1.5] text-[#1a1a1a]">{attribution}</p>
-        </div>
-        <button
-          type="button"
-          className="flex w-full items-center justify-center rounded-xl bg-[#1a1a1a] px-4 py-[9px] text-[14px] font-medium leading-none text-white transition-colors hover:bg-black"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          {ctaLabel}
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function RefineCard({ refineHref }: { refineHref: string }) {
-  return (
-    <article className="flex h-full min-h-[420px] flex-col gap-6 rounded-2xl bg-[#f5f5f5] p-4">
-      <h2
-        className="text-[18px] font-medium leading-snug text-black"
-        style={{ fontFamily: "var(--font-public-sans)" }}
-      >
-        Neither, we need to refine
-      </h2>
-      <div className="flex flex-1 flex-col gap-3 rounded-2xl bg-white p-4 text-[12px] leading-[1.5] text-[#1a1a1a]">
-        <p style={{ fontFamily: "var(--font-public-sans)" }}>
-          What&apos;s missing? What would make the next round sharper?
-        </p>
-        <p
-          className="italic"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          (Refinement triggers if 2 or more vote for it. Refine votes require a written reason.)
-        </p>
-      </div>
-      <Link
-        href={refineHref}
-        className="flex w-full items-center justify-center rounded-xl bg-[#1a1a1a] px-4 py-[9px] text-[14px] font-medium leading-none text-white transition-colors hover:bg-black"
-        style={{ fontFamily: "var(--font-public-sans)" }}
-      >
-        Refine
-      </Link>
-    </article>
   );
 }
 

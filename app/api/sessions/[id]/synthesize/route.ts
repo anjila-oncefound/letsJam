@@ -31,7 +31,8 @@ export async function POST(
     const perspectives = await clusterReflections(
       session.topic,
       written,
-      session.summary
+      session.summary,
+      session.refineContext
     );
     await setPerspectives(id, perspectives);
     return NextResponse.json({ perspectives });
