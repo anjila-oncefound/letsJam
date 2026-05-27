@@ -18,6 +18,14 @@ export type SessionSummary = {
   differences: string[];
 };
 
+export type Reflection = {
+  participantId: string;
+  name: string;
+  text: string;
+  passed: boolean;
+  submittedAt: number;
+};
+
 export type StoredSession = {
   id: string;
   topic: string;
@@ -28,6 +36,7 @@ export type StoredSession = {
   createdAt: number;
   participants: Participant[];
   summary?: SessionSummary;
+  reflections: Reflection[];
 };
 
 const AVATAR_COLORS = [
@@ -108,6 +117,36 @@ export async function setSummary(
   const session = await getSession(sessionId);
   if (!session) return false;
   session.summary = summary;
+  await saveSession(session);
+  return true;
+}
+
+// Upsert a participant's reflection — re-submitting replaces the prior one.
+export async function saveReflection(
+  sessionId: string,
+  reflection: { participantId: string; text: string; passed: boolean }
+): Promise<boolean> {
+  const session = await getSession(sessionId);
+  if (!session) return false;
+  const participant = session.participants.find(
+    (p) => p.id === reflection.participantId
+  );
+  const entry: Reflection = {
+    participantId: reflection.participantId,
+    name: participant?.name ?? "Someone",
+    text: reflection.text,
+    passed: reflection.passed,
+    submittedAt: Date.now(),
+  };
+  if (!session.reflections) session.reflections = [];
+  const existing = session.reflections.findIndex(
+    (r) => r.participantId === reflection.participantId
+  );
+  if (existing >= 0) {
+    session.reflections[existing] = entry;
+  } else {
+    session.reflections.push(entry);
+  }
   await saveSession(session);
   return true;
 }

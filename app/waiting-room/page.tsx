@@ -7,7 +7,7 @@ import { JoinModal } from "./JoinModal";
 import { ParticipantList } from "@/app/_components/ParticipantList";
 
 export const metadata = {
-  title: "Waiting room — Together",
+  title: "Waiting room — Jam",
 };
 
 const TIMELINE_STEPS = [
@@ -48,7 +48,7 @@ export default async function WaitingRoomPage({
 function Header() {
   return (
     <header className="flex items-center gap-3 px-6 py-6 md:px-12 lg:px-16">
-      <Link href="/" className="inline-flex" aria-label="Together home">
+      <Link href="/" className="inline-flex" aria-label="Jam home">
         <Logo />
       </Link>
     </header>
@@ -62,7 +62,7 @@ function Logo() {
         className="col-start-1 row-start-1 ml-[20px] text-[22px] leading-[0.9] tracking-[-0.88px] text-black"
         style={{ fontFamily: "var(--font-dm-sans)" }}
       >
-        Together
+        Jam
       </p>
       <div className="col-start-1 row-start-1 flex h-[18px] w-[22px] items-center justify-center">
         <div className="-rotate-15">

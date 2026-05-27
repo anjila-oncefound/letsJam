@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       roomName,
       createdAt: Date.now(),
       participants: [],
+      reflections: [],
     });
     // Reverse index so the transcription webhook (which only knows roomName) finds us.
     await linkRoomToSession(roomName, id);

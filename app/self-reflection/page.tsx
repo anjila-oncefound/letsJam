@@ -6,9 +6,10 @@ import {
   type SessionSummary,
 } from "@/lib/sessions";
 import { ParticipantList } from "@/app/_components/ParticipantList";
+import { ReflectionForm } from "./ReflectionForm";
 
 export const metadata = {
-  title: "Self reflection — Together",
+  title: "Self reflection — Jam",
 };
 
 const TIMELINE_STEPS = [
@@ -49,7 +50,7 @@ export default async function SelfReflectionPage({
 function Header() {
   return (
     <header className="flex items-center justify-between px-6 py-6 md:px-12 lg:px-16">
-      <Link href="/" className="inline-flex" aria-label="Together home">
+      <Link href="/" className="inline-flex" aria-label="Jam home">
         <Logo />
       </Link>
       <div className="flex items-center gap-3">
@@ -94,7 +95,7 @@ function Logo() {
         className="col-start-1 row-start-1 ml-[20px] text-[22px] leading-[0.9] tracking-[-0.88px] text-black"
         style={{ fontFamily: "var(--font-dm-sans)" }}
       >
-        Together
+        Jam
       </p>
       <div className="col-start-1 row-start-1 flex h-[18px] w-[22px] items-center justify-center">
         <div className="-rotate-15">
@@ -164,24 +165,7 @@ function MainCard({
 
         <SummarySnippets summary={summary} />
 
-        <ReflectionInput />
-      </div>
-
-      <div className="flex gap-4">
-        <button
-          type="button"
-          className="flex w-[228px] items-center justify-center rounded-2xl bg-white p-4 text-[14px] font-medium leading-none text-black ring-1 ring-inset ring-black/10 transition-colors hover:bg-neutral-100"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          Pass
-        </button>
-        <Link
-          href={onwardHref}
-          className="flex flex-1 items-center justify-center rounded-2xl bg-[#1a1a1a] p-4 text-[14px] font-medium leading-none text-white transition-colors hover:bg-black"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          Submit
-        </Link>
+        <ReflectionForm sessionId={sessionId} onwardHref={onwardHref} />
       </div>
     </section>
   );
@@ -223,38 +207,6 @@ function SummarySnippets({ summary }: { summary?: SessionSummary }) {
           </ul>
         </div>
       ))}
-    </div>
-  );
-}
-
-function ReflectionInput() {
-  return (
-    <div className="flex h-[342px] flex-col justify-between rounded-2xl bg-[#f5f5f5] p-4">
-      <textarea
-        className="w-full flex-1 resize-none bg-transparent text-[15px] leading-[1.5] text-[#1a1a1a] outline-none placeholder:text-[#7a7a7a]"
-        defaultValue="What's your read on this? What would you do, and why? Be specific — your thinking is what the AI uses to find the real choice the room faces."
-        style={{ fontFamily: "var(--font-public-sans)" }}
-      />
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-[#b5b5b5]" aria-hidden>
-            🔒
-          </span>
-          <p
-            className="text-[12px] text-[#7a7a7a]"
-            style={{ fontFamily: "var(--font-public-sans)" }}
-          >
-            Private until everyone is in
-          </p>
-        </div>
-        <button
-          type="button"
-          className="rounded-xl bg-white px-4 py-2 text-[14px] font-medium leading-none text-[#1a1a1a] transition-colors hover:bg-neutral-100"
-          style={{ fontFamily: "var(--font-public-sans)" }}
-        >
-          Refine
-        </button>
-      </div>
     </div>
   );
 }

@@ -29,7 +29,7 @@ export async function summarizeTranscript(
   transcript: string
 ): Promise<SessionSummary> {
   const response = await client.messages.parse({
-    model: "claude-opus-4-7",
+    model: "claude-haiku-4-5",
     max_tokens: 2000,
     system: [
       {

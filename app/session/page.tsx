@@ -5,7 +5,7 @@ import { WherebyRoom } from "./WherebyRoomClient";
 import { ParticipantList } from "@/app/_components/ParticipantList";
 
 export const metadata = {
-  title: "Session — Together",
+  title: "Session — Jam",
 };
 
 const PROMPT_TEXT =
@@ -43,7 +43,7 @@ function MainColumn({
   return (
     <div className="flex min-h-[calc(100vh-4rem)] min-w-0 flex-1 flex-col">
       <header className="flex items-center">
-        <Link href="/" aria-label="Together home" className="inline-flex">
+        <Link href="/" aria-label="Jam home" className="inline-flex">
           <JamLogo />
         </Link>
       </header>
