@@ -132,7 +132,7 @@ function HeroExamples() {
       >
         Get started with
       </p>
-      <ul className="grid grid-cols-2 gap-x-8 gap-y-6">
+      <ul className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
         {HERO_EXAMPLES.map((example) => (
           <li key={example.title}>
             <button
@@ -216,9 +216,9 @@ function FairlySection() {
         className="heading-display text-[44px] leading-[0.8] text-black md:text-[60px] lg:text-[72px]"
         style={{ fontWeight: 300 }}
       >
-        <span className="whitespace-nowrap">Host meetings where decisions</span>
-        <br />
-        <span className="whitespace-nowrap">
+        <span className="md:whitespace-nowrap">Host meetings where decisions</span>
+        <br className="hidden md:inline" />{" "}
+        <span className="md:whitespace-nowrap">
           actually get made{" "}
           <em className="heading-display-italic" style={{ fontWeight: 300 }}>
             fairly

@@ -105,7 +105,7 @@ function MainCard({
   outcome?: Outcome;
 }) {
   return (
-    <section className="flex min-w-0 flex-1 flex-col gap-8 rounded-3xl bg-white p-8 md:p-12">
+    <section className="flex min-w-0 flex-1 flex-col gap-8 rounded-3xl bg-white p-6 md:p-8 lg:p-12">
       <div className="flex flex-col gap-4">
         <p
           className="text-[14px] font-medium leading-none text-[#e96748]"

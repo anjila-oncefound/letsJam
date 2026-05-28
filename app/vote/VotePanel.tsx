@@ -262,7 +262,7 @@ function PerspectiveCard({
   onVote: () => void;
 }) {
   return (
-    <article className="flex h-full min-h-[420px] flex-col justify-between gap-6 rounded-2xl bg-[#f5f5f5] p-4">
+    <article className="flex h-full flex-col justify-between gap-6 rounded-2xl bg-[#f5f5f5] p-4 lg:min-h-[420px]">
       <div className="flex flex-col gap-6">
         <p
           className="text-[14px] font-medium leading-none text-[#e96748]"
@@ -321,7 +321,7 @@ function RefineCard({
   onSubmit: () => void;
 }) {
   return (
-    <article className="flex h-full min-h-[420px] flex-col gap-6 rounded-2xl bg-[#f5f5f5] p-4">
+    <article className="flex h-full flex-col gap-6 rounded-2xl bg-[#f5f5f5] p-4 lg:min-h-[420px]">
       <h2
         className="text-[18px] font-medium leading-snug text-black"
         style={{ fontFamily: "var(--font-public-sans)" }}

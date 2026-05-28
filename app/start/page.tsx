@@ -16,14 +16,14 @@ export default function StartSessionPage() {
 
 function Header() {
   return (
-    <header className="flex items-center justify-between px-6 py-6 md:px-12 lg:px-16">
+    <header className="flex flex-wrap items-center justify-between gap-3 px-6 py-6 md:px-12 lg:px-16">
       <Link href="/" className="inline-flex" aria-label="Jam home">
         <Logo />
       </Link>
-      <div className="flex items-center gap-3">
-        <div className="flex h-[46px] items-center justify-center rounded-full bg-white px-6 py-3">
+      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        <div className="flex h-[46px] items-center justify-center rounded-full bg-white px-4 py-3 sm:px-6">
           <span
-            className="text-[15px] leading-none text-black/30"
+            className="text-[13px] leading-none text-black/30 sm:text-[15px]"
             style={{ fontFamily: "var(--font-public-sans)" }}
           >
             Session pending
@@ -84,7 +84,7 @@ function Body() {
 
 function MainCard() {
   return (
-    <section className="flex min-w-0 flex-1 flex-col justify-between gap-12 rounded-3xl bg-white p-8 md:p-12">
+    <section className="flex min-w-0 flex-1 flex-col justify-between gap-12 rounded-3xl bg-white p-6 md:p-8 lg:p-12">
       <StartForm />
     </section>
   );

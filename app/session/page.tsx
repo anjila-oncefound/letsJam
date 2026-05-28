@@ -21,7 +21,7 @@ export default async function SessionPage({
   const session = await getSession(sessionId);
   if (!session) notFound();
   return (
-    <div className="flex min-h-screen items-start gap-6 bg-background p-6 md:gap-8 md:p-8">
+    <div className="flex min-h-screen flex-col items-stretch gap-6 bg-background p-6 md:gap-8 md:p-8 lg:flex-row lg:items-start">
       <MainColumn roomUrl={session.roomUrl} sessionId={session.id} />
       <Sidebar
         sessionId={session.id}
@@ -41,7 +41,7 @@ function MainColumn({
   sessionId: string;
 }) {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] min-w-0 flex-1 flex-col">
+    <div className="flex min-h-[60vh] min-w-0 flex-1 flex-col lg:min-h-[calc(100vh-4rem)]">
       <header className="flex items-center">
         <Link href="/" aria-label="Jam home" className="inline-flex">
           <JamLogo />
@@ -95,7 +95,7 @@ function Sidebar({
   participants: Participant[];
 }) {
   return (
-    <aside className="flex h-[calc(100vh-4rem)] w-full flex-col justify-between rounded-3xl bg-white p-6 lg:w-[420px] xl:w-[479px]">
+    <aside className="flex h-auto w-full flex-col justify-between gap-8 rounded-3xl bg-white p-6 lg:h-[calc(100vh-4rem)] lg:w-[420px] lg:gap-0 xl:w-[479px]">
       <div className="flex flex-col gap-16">
         <SessionInfo topic={topic} />
         <ParticipantList

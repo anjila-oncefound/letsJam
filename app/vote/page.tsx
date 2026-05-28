@@ -51,21 +51,23 @@ export default async function VotePage({
 
 function Header() {
   return (
-    <header className="flex items-center justify-between px-6 py-6 md:px-12 lg:px-16">
+    <header className="flex flex-wrap items-center justify-between gap-3 px-6 py-6 md:px-12 lg:px-16">
       <Link href="/" className="inline-flex" aria-label="Jam home">
         <Logo />
       </Link>
-      <div className="flex items-center gap-3">
-        <div className="flex h-[46px] items-center gap-6 rounded-full bg-[#232323] px-6">
+      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        <div className="flex h-[46px] items-center gap-3 rounded-full bg-[#232323] px-4 sm:gap-6 sm:px-6">
           <button
             type="button"
-            className="text-[15px] leading-none text-white transition-opacity hover:opacity-80"
+            aria-label="Pause"
+            className="flex items-center gap-2 text-[13px] leading-none text-white transition-opacity hover:opacity-80 sm:text-[15px]"
             style={{ fontFamily: "var(--font-public-sans)" }}
           >
-            Pause
+            <PauseIcon />
+            <span className="hidden sm:inline">Pause</span>
           </button>
           <span
-            className="text-[15px] leading-none text-white/50"
+            className="text-[13px] leading-none text-white/50 sm:text-[15px]"
             style={{ fontFamily: "var(--font-public-sans)" }}
           >
             4:24s remaining
@@ -163,7 +165,7 @@ function MainCard({
 }) {
   const ready = perspectives && perspectives.length >= 2;
   return (
-    <section className="flex min-w-0 flex-1 flex-col gap-6 rounded-3xl bg-white p-8 md:p-12">
+    <section className="flex min-w-0 flex-1 flex-col gap-6 rounded-3xl bg-white p-6 md:p-8 lg:p-12">
       <div className="flex flex-col gap-4">
         <p
           className="text-[14px] font-medium leading-none text-black"
@@ -327,6 +329,15 @@ function VideoIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect x="2" y="6" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
       <path d="M16 10l5-3v10l-5-3v-4z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden>
+      <rect x="3" y="2" width="2.5" height="10" rx="0.6" />
+      <rect x="8.5" y="2" width="2.5" height="10" rx="0.6" />
     </svg>
   );
 }

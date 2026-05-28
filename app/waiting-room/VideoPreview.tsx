@@ -58,7 +58,7 @@ function PreviewInner() {
 
   return (
     <div className="relative w-full max-w-[366px]">
-      <div className="absolute -left-16 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-3">
+      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 flex-row gap-3 sm:bottom-auto sm:left-[-4rem] sm:top-1/2 sm:translate-x-0 sm:-translate-y-1/2 sm:flex-col">
         <IconButton
           ariaLabel={micOn ? "Mute microphone" : "Unmute microphone"}
           pressed={micOn}
