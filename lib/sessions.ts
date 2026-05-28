@@ -58,6 +58,9 @@ export type StoredSession = {
   hostRoomUrl: string;
   roomName: string;
   createdAt: number;
+  // When the host clicked "Start Session". Drives the synchronized
+  // countdown shown on every client in the waiting room.
+  startedAt?: number;
   participants: Participant[];
   summary?: SessionSummary;
   reflections: Reflection[];
@@ -195,6 +198,25 @@ export async function saveReflection(
 
 export function currentRound(session: StoredSession): number {
   return session.round ?? 1;
+}
+
+// Mark the room as started so every client's countdown anchors to the same instant.
+// Idempotent — re-calling preserves the first startedAt so the countdown doesn't reset.
+export async function startSession(
+  sessionId: string,
+  hostParticipantId: string
+): Promise<{ ok: true; startedAt: number } | { ok: false; reason: "no-session" | "not-host" }> {
+  const session = await getSession(sessionId);
+  if (!session) return { ok: false, reason: "no-session" };
+  const host = session.participants[0];
+  if (!host || host.id !== hostParticipantId) {
+    return { ok: false, reason: "not-host" };
+  }
+  if (!session.startedAt) {
+    session.startedAt = Date.now();
+    await saveSession(session);
+  }
+  return { ok: true, startedAt: session.startedAt };
 }
 
 export type Tally = { A: number; B: number; refine: number };

@@ -20,5 +20,6 @@ export async function GET(
     allSubmitted: total > 0 && reflections.length >= total,
     submittedIds: reflections.map((r) => r.participantId),
     round: currentRound(session),
+    startedAt: session.startedAt ?? null,
   });
 }

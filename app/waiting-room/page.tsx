@@ -4,6 +4,7 @@ import { getSession, type Participant } from "@/lib/sessions";
 import { VideoPreview } from "./VideoPreviewClient";
 import { InviteModal } from "./InviteModal";
 import { JoinModal } from "./JoinModal";
+import { MainCardActions } from "./MainCardActions";
 import { ParticipantList } from "@/app/_components/ParticipantList";
 
 export const metadata = {
@@ -93,7 +94,7 @@ function Body({
 }) {
   return (
     <div className="flex flex-1 flex-col items-stretch gap-6 px-6 pb-12 pt-4 md:px-12 lg:flex-row lg:gap-8 lg:px-16 lg:pb-16 lg:pt-8">
-      <MainCard sessionId={sessionId} />
+      <MainCard sessionId={sessionId} hostId={participants[0]?.id} />
       <Sidebar
         sessionId={sessionId}
         topic={topic}
@@ -104,9 +105,13 @@ function Body({
   );
 }
 
-function MainCard({ sessionId }: { sessionId: string }) {
-  const onwardHref = `/session?session=${sessionId}`;
-  const inviteHref = `/waiting-room?session=${sessionId}&invite=1`;
+function MainCard({
+  sessionId,
+  hostId,
+}: {
+  sessionId: string;
+  hostId?: string;
+}) {
   return (
     <section className="flex min-w-0 flex-1 items-center justify-center">
       <div className="flex w-full max-w-[640px] flex-col items-center gap-11">
@@ -127,38 +132,11 @@ function MainCard({ sessionId }: { sessionId: string }) {
 
         <VideoPreview />
 
-        <div className="flex w-full flex-col gap-4 sm:flex-row sm:gap-6">
-          <SecondaryButton href={inviteHref}>Invite team</SecondaryButton>
-          <SecondaryButton href={onwardHref}>Join the waiting room</SecondaryButton>
-        </div>
+        <MainCardActions sessionId={sessionId} hostId={hostId} />
 
         <HowItWorks />
       </div>
     </section>
-  );
-}
-
-function SecondaryButton({
-  children,
-  href,
-}: {
-  children: React.ReactNode;
-  href?: string;
-}) {
-  const className =
-    "flex flex-1 items-center justify-center rounded-2xl bg-[#1a1a1a] p-4 text-[14px] font-medium leading-none text-white transition-colors hover:bg-black";
-  const style = { fontFamily: "var(--font-inter)" };
-  if (href) {
-    return (
-      <Link href={href} className={className} style={style}>
-        {children}
-      </Link>
-    );
-  }
-  return (
-    <button type="button" className={className} style={style}>
-      {children}
-    </button>
   );
 }
 
