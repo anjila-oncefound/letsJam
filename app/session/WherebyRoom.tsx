@@ -188,14 +188,20 @@ function ControlBar({
       >
         <VideoIcon muted={!cameraOn} />
       </ControlButton>
-      <ControlButton
-        ariaLabel={sharingScreen ? "Stop sharing screen" : "Share screen"}
-        pressed={sharingScreen}
+      <button
+        type="button"
+        aria-label={sharingScreen ? "Stop sharing screen" : "Share screen"}
+        aria-pressed={sharingScreen}
         onClick={onToggleScreenshare}
         disabled={screenshareBusy}
+        className={`grid h-[52px] w-[52px] place-items-center rounded-full shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+          sharingScreen
+            ? "bg-[#e85d3c] text-white ring-2 ring-white hover:bg-[#d44d2e]"
+            : "bg-white text-black hover:bg-neutral-100"
+        }`}
       >
         <ScreenshareIcon active={sharingScreen} />
-      </ControlButton>
+      </button>
       <button
         type="button"
         aria-label="End session"
@@ -332,6 +338,30 @@ function VideoIcon({ muted }: { muted?: boolean }) {
 }
 
 function ScreenshareIcon({ active }: { active?: boolean }) {
+  if (active) {
+    // While sharing, show a filled stop-square — universally legible as
+    // "tap to stop" and visually different from the idle share icon.
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <rect
+          x="3"
+          y="4"
+          width="18"
+          height="13"
+          rx="2"
+          stroke="currentColor"
+          strokeWidth="1.6"
+        />
+        <path
+          d="M8 21h8"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+        <rect x="9" y="8" width="6" height="5" rx="1" fill="currentColor" />
+      </svg>
+    );
+  }
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect
@@ -350,7 +380,7 @@ function ScreenshareIcon({ active }: { active?: boolean }) {
         strokeLinecap="round"
       />
       <path
-        d={active ? "M12 14V8m0 0l-3 3m3-3l3 3" : "M12 8v6m0-6l-3 3m3-3l3 3"}
+        d="M12 13V7m0 0l-3 3m3-3l3 3"
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
