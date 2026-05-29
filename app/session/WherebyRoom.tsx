@@ -112,6 +112,7 @@ function RoomInner({
       {state.connectionStatus !== "connected" ? (
         <Placeholder label={statusLabel(state.connectionStatus)} />
       ) : null}
+      {sharingScreen ? <SharingBanner onStop={stopScreenshare} /> : null}
       <ControlBar
         cameraOn={cameraOn}
         micOn={micOn}
@@ -126,6 +127,29 @@ function RoomInner({
         onEnd={handleEnd}
       />
     </RoomShell>
+  );
+}
+
+function SharingBanner({ onStop }: { onStop: () => void }) {
+  return (
+    <div className="absolute inset-x-0 top-4 z-20 flex justify-center px-4">
+      <div
+        className="flex items-center gap-3 rounded-full bg-[#1a1a1a]/90 px-4 py-2 text-white shadow-md backdrop-blur"
+        style={{ fontFamily: "var(--font-public-sans)" }}
+      >
+        <span className="grid h-2 w-2 place-items-center rounded-full bg-[#e85d3c]" aria-hidden>
+          <span className="h-2 w-2 animate-ping rounded-full bg-[#e85d3c]/70" />
+        </span>
+        <span className="text-[13px] leading-none">You&apos;re sharing your screen</span>
+        <button
+          type="button"
+          onClick={onStop}
+          className="rounded-full bg-[#e85d3c] px-3 py-1.5 text-[12px] font-medium leading-none text-white transition-colors hover:bg-[#d44d2e]"
+        >
+          Stop sharing
+        </button>
+      </div>
+    </div>
   );
 }
 
