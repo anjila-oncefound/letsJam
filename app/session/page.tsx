@@ -106,7 +106,8 @@ function Sidebar({
         />
         <SessionContext files={files} />
       </div>
-      <AiPanel sessionId={sessionId} />
+      {/* Hidden for now — AI decisions panel. Restore when ready. */}
+      {/* <AiPanel sessionId={sessionId} /> */}
     </aside>
   );
 }
@@ -162,6 +163,7 @@ function ContextChip({ name }: { name: string }) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- temporarily hidden in Sidebar; restore when ready
 function AiPanel({ sessionId }: { sessionId: string }) {
   const onwardHref = `/self-reflection?session=${sessionId}`;
   return (
