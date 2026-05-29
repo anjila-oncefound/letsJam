@@ -18,28 +18,37 @@ export function MainCardActions({
   const router = useRouter();
   const [isHost, setIsHost] = useState<boolean | null>(null);
   const [meId, setMeId] = useState<string | null>(null);
+  const [hasParticipant, setHasParticipant] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Identify the current participant + whether they're the host.
+  // Identify the current participant + whether they're the host. Re-runs
+  // whenever JoinModal completes (it dispatches "jam:participant-changed"),
+  // so late joiners flow from "no participant" to registered without a
+  // page reload.
   useEffect(() => {
-    if (!hostId) {
-      setIsHost(false);
-      return;
-    }
-    try {
-      const stored = localStorage.getItem(`participant.${sessionId}`);
-      if (!stored) {
+    const read = () => {
+      try {
+        const stored = localStorage.getItem(`participant.${sessionId}`);
+        if (!stored) {
+          setHasParticipant(false);
+          setMeId(null);
+          setIsHost(hostId ? false : false);
+          return;
+        }
+        const parsed = JSON.parse(stored) as { id?: string };
+        setMeId(parsed.id ?? null);
+        setHasParticipant(true);
+        setIsHost(hostId != null && parsed.id === hostId);
+      } catch {
+        setHasParticipant(false);
         setIsHost(false);
-        return;
       }
-      const parsed = JSON.parse(stored) as { id?: string };
-      setMeId(parsed.id ?? null);
-      setIsHost(parsed.id === hostId);
-    } catch {
-      setIsHost(false);
-    }
+    };
+    read();
+    window.addEventListener("jam:participant-changed", read);
+    return () => window.removeEventListener("jam:participant-changed", read);
   }, [sessionId, hostId]);
 
   // Poll the session status so non-hosts see startedAt as soon as the host triggers it.
@@ -88,14 +97,22 @@ export function MainCardActions({
     }
   }, [sessionId, meId, starting, startedAt]);
 
-  // Countdown overlay handles its own ticking + redirect.
-  if (startedAt) {
+  // Countdown overlay handles its own ticking + redirect. Only fire it
+  // once the user is actually registered — otherwise a late joiner whose
+  // JoinModal hasn't been submitted yet gets dragged into /session
+  // anonymously the instant we discover startedAt is in the past.
+  if (startedAt && hasParticipant) {
     return (
       <CountdownOverlay
         startedAt={startedAt}
         onDone={() => router.push(`/session?session=${sessionId}`)}
       />
     );
+  }
+  if (startedAt && !hasParticipant) {
+    // JoinModal is covering the screen; JoinModal will route to /session
+    // itself once the name is captured.
+    return null;
   }
 
   if (isHost === null) {

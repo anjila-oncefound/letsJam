@@ -63,6 +63,26 @@ export function JoinModal() {
         `participant.${sessionId}`,
         JSON.stringify(participant)
       );
+      window.dispatchEvent(new Event("jam:participant-changed"));
+
+      // If the host already kicked things off while this person was
+      // typing, drop them straight into /session — skipping the 3-2-1
+      // countdown they missed.
+      try {
+        const sr = await fetch(`/api/sessions/${sessionId}/status`, {
+          cache: "no-store",
+        });
+        if (sr.ok) {
+          const data = (await sr.json()) as { startedAt?: number | null };
+          if (data.startedAt) {
+            router.push(`/session?session=${sessionId}`);
+            return;
+          }
+        }
+      } catch {
+        // network blip; fall through to waiting room
+      }
+
       setOpen(false);
       router.refresh();
     } catch (err) {
